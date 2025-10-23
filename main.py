@@ -1,113 +1,165 @@
-import tkinter as tk
-from tkinter import ttk
-import cefpython3 as cef
-import platform
-import threading
+#!/usr/bin/env python3
+import sys
+import os
+from PyQt5.QtCore import *
+from PyQt5.QtWidgets import *
+from PyQt5.QtWebEngineWidgets import *
+from PyQt5.QtGui import *
 
-class BrowserFrame(tk.Frame):
-    def __init__(self, parent):
-        self.parent = parent
-        tk.Frame.__init__(self, parent)
-        self.browser = None
-        self.bind("<Configure>", self.on_configure)
-        self.nav_bar = self.create_nav_bar()
-        self.main_frame = tk.Frame(self)
-        self.main_frame.pack(fill=tk.BOTH, expand=True)
+class Browser(QMainWindow):
+    def __init__(self):
+        super().__init__()
+        self.initUI()
         
-    def create_nav_bar(self):
-        nav_bar = tk.Frame(self)
-        nav_bar.pack(fill=tk.X)
+    def initUI(self):
+        # Create web view
+        self.web_view = QWebEngineView()
+        self.web_view.load(QUrl("https://www.youtube.com"))
+        
+        # Create navigation bar
+        nav_bar = QToolBar()
+        nav_bar.setMovable(False)
+        self.addToolBar(nav_bar)
         
         # Back button
-        back_btn = tk.Button(nav_bar, text="←", command=self.go_back)
-        back_btn.pack(side=tk.LEFT)
+        back_btn = QAction('← Back', self)
+        back_btn.triggered.connect(self.web_view.back)
+        nav_bar.addAction(back_btn)
         
         # Forward button
-        forward_btn = tk.Button(nav_bar, text="→", command=self.go_forward)
-        forward_btn.pack(side=tk.LEFT)
+        forward_btn = QAction('Forward →', self)
+        forward_btn.triggered.connect(self.web_view.forward)
+        nav_bar.addAction(forward_btn)
         
         # Reload button
-        reload_btn = tk.Button(nav_bar, text="↻", command=self.reload)
-        reload_btn.pack(side=tk.LEFT)
+        reload_btn = QAction('🔄 Reload', self)
+        reload_btn.triggered.connect(self.web_view.reload)
+        nav_bar.addAction(reload_btn)
         
-        # URL entry
-        self.url_entry = tk.Entry(nav_bar)
-        self.url_entry.pack(side=tk.LEFT, fill=tk.X, expand=True)
-        self.url_entry.bind("<Return>", self.load_url)
+        # Home button
+        home_btn = QAction('🏠 YouTube', self)
+        home_btn.triggered.connect(self.home)
+        nav_bar.addAction(home_btn)
+        
+        # URL bar
+        self.url_bar = QLineEdit()
+        self.url_bar.setPlaceholderText("Enter URL or search YouTube...")
+        self.url_bar.returnPressed.connect(self.navigate_to_url)
+        nav_bar.addWidget(self.url_bar)
         
         # Go button
-        go_btn = tk.Button(nav_bar, text="Go", command=self.load_url)
-        go_btn.pack(side=tk.LEFT)
+        go_btn = QAction('🚀 Go', self)
+        go_btn.triggered.connect(self.navigate_to_url)
+        nav_bar.addAction(go_btn)
         
-        # YouTube button
-        yt_btn = tk.Button(nav_bar, text="YouTube", command=self.load_youtube)
-        yt_btn.pack(side=tk.LEFT)
+        # Connect signals
+        self.web_view.urlChanged.connect(self.update_url)
+        self.web_view.titleChanged.connect(self.update_title)
+        self.web_view.loadProgress.connect(self.show_loading)
         
-        return nav_bar
+        # Set central widget
+        self.setCentralWidget(self.web_view)
         
-    def embed_browser(self):
-        window_info = cef.WindowInfo()
-        window_info.SetAsChild(self.main_frame.winfo_id(), 
-                              [0, 0, self.winfo_width(), self.winfo_height()-50])
-        self.browser = cef.CreateBrowserSync(window_info, url="https://www.youtube.com")
+        # Status bar
+        self.status = self.statusBar()
+        self.status.showMessage("Ready - Loading YouTube...")
         
-    def on_configure(self, event):
-        if self.browser:
-            self.browser.SetBounds(0, 0, event.width, event.height-50)
-            
-    def go_back(self):
-        if self.browser:
-            self.browser.GoBack()
-            
-    def go_forward(self):
-        if self.browser:
-            self.browser.GoForward()
-            
-    def reload(self):
-        if self.browser:
-            self.browser.Reload()
-            
-    def load_url(self, event=None):
-        if self.browser:
-            url = self.url_entry.get()
-            if not url.startswith('http'):
-                url = 'https://' + url
-            self.browser.LoadUrl(url)
-            
-    def load_youtube(self):
-        if self.browser:
-            self.browser.LoadUrl("https://www.youtube.com")
-
-class App:
-    def __init__(self):
-        self.root = tk.Tk()
-        self.root.title("GitHub Browser - YouTube")
-        self.root.geometry("1200x800")
+        # Window settings
+        self.setGeometry(100, 100, 1400, 900)
+        self.setWindowTitle('GitHub Browser - YouTube')
         
-        # Initialize CEF
-        settings = {
-            "multi_threaded_message_loop": False,
+        # Apply dark theme
+        self.apply_dark_theme()
+        
+    def apply_dark_theme(self):
+        # Set dark style sheet
+        dark_stylesheet = """
+        QMainWindow {
+            background-color: #1e1e1e;
+            color: #ffffff;
         }
-        cef.Initialize(settings)
+        QToolBar {
+            background-color: #2d2d2d;
+            border: none;
+            spacing: 5px;
+            padding: 5px;
+        }
+        QAction {
+            color: #ffffff;
+            background-color: #3d3d3d;
+            padding: 8px 12px;
+            border-radius: 4px;
+        }
+        QAction:hover {
+            background-color: #4d4d4d;
+        }
+        QLineEdit {
+            background-color: #3d3d3d;
+            color: #ffffff;
+            border: 1px solid #555;
+            border-radius: 4px;
+            padding: 8px 12px;
+            font-size: 14px;
+        }
+        QLineEdit:focus {
+            border-color: #ff0000;
+        }
+        """
+        self.setStyleSheet(dark_stylesheet)
         
-        self.browser_frame = BrowserFrame(self.root)
-        self.browser_frame.pack(fill=tk.BOTH, expand=True)
+    def navigate_to_url(self):
+        url = self.url_bar.text().strip()
+        if not url:
+            return
+            
+        if not url.startswith(('http://', 'https://')):
+            if ' ' in url or '.' not in url:
+                # Search YouTube
+                url = f"https://www.youtube.com/results?search_query={url.replace(' ', '+')}"
+            else:
+                url = 'https://' + url
+                
+        self.web_view.load(QUrl(url))
+        self.status.showMessage(f"Loading: {url}")
         
-        # Embed browser after mainloop starts
-        self.root.after(100, self.browser_frame.embed_browser)
+    def update_url(self, q):
+        self.url_bar.setText(q.toString())
         
-        # Handle window close
-        self.root.protocol("WM_DELETE_WINDOW", self.on_close)
+    def update_title(self, title):
+        self.setWindowTitle(f'{title} - GitHub Browser')
         
-    def on_close(self):
-        if self.browser_frame.browser:
-            self.browser_frame.browser.CloseBrowser()
-        cef.Shutdown()
-        self.root.destroy()
+    def show_loading(self, progress):
+        if progress < 100:
+            self.status.showMessage(f"Loading... {progress}%")
+        else:
+            self.status.showMessage("Ready")
         
-    def run(self):
-        self.root.mainloop()
+    def home(self):
+        self.web_view.load(QUrl("https://www.youtube.com"))
+        self.status.showMessage("Loading YouTube homepage...")
+
+def main():
+    # Enable high DPI scaling
+    QApplication.setAttribute(Qt.AA_EnableHighDpiScaling, True)
+    QApplication.setAttribute(Qt.AA_UseHighDpiPixmaps, True)
+    
+    # For headless environments
+    if os.environ.get('DISPLAY') is None:
+        os.environ['QT_QPA_PLATFORM'] = 'xcb'
+        os.environ['DISPLAY'] = ':1'
+    
+    app = QApplication(sys.argv)
+    
+    # Set application properties
+    app.setApplicationName("GitHub Browser")
+    app.setApplicationVersion("1.0")
+    app.setWindowIcon(QIcon.fromTheme('web-browser'))
+    
+    # Create and show browser
+    browser = Browser()
+    browser.show()
+    
+    sys.exit(app.exec_())
 
 if __name__ == '__main__':
-    app = App()
-    app.run()
+    main()
