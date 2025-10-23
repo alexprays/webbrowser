@@ -1,14 +1,19 @@
 #!/bin/bash
 
-# Set display for virtual desktop
-export DISPLAY=:1
+echo "🎬 Starting YouTube Browser..."
+echo "🖥️  Setting up environment..."
+
+# Use Desktop Lite display
+export DISPLAY=:0
 export QT_QPA_PLATFORM=xcb
 
-# Start the browser
-echo "🚀 Starting YouTube Browser..."
-echo "📺 The browser will open in the virtual desktop"
-echo "🌐 Access it via: Ports tab → 6080 → Open in Browser"
-echo "🔑 Password: codespaces"
-echo ""
+# Fix potential issues
+export QT_DEBUG_PLUGINS=0
+export QTWEBENGINE_CHROMIUM_FLAGS="--no-sandbox --disable-web-security"
 
-python main.py
+echo "🔧 Environment:"
+echo "   DISPLAY: $DISPLAY"
+echo "   QT_PLATFORM: $QT_QPA_PLATFORM"
+
+echo "🚀 Launching browser..."
+python3 main.py

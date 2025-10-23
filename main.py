@@ -6,108 +6,122 @@ from PyQt5.QtWidgets import *
 from PyQt5.QtWebEngineWidgets import *
 from PyQt5.QtGui import *
 
-class Browser(QMainWindow):
+class YouTubeBrowser(QMainWindow):
     def __init__(self):
         super().__init__()
         self.initUI()
         
     def initUI(self):
+        # Set window properties
+        self.setWindowTitle("YouTube Browser - GitHub Codespaces")
+        self.resize(1400, 900)
+        self.move(100, 100)
+        
         # Create web view
         self.web_view = QWebEngineView()
         self.web_view.load(QUrl("https://www.youtube.com"))
         
-        # Create navigation bar
-        nav_bar = QToolBar()
-        nav_bar.setMovable(False)
-        self.addToolBar(nav_bar)
-        
-        # Back button
-        back_btn = QAction('← Back', self)
-        back_btn.triggered.connect(self.web_view.back)
-        nav_bar.addAction(back_btn)
-        
-        # Forward button
-        forward_btn = QAction('Forward →', self)
-        forward_btn.triggered.connect(self.web_view.forward)
-        nav_bar.addAction(forward_btn)
-        
-        # Reload button
-        reload_btn = QAction('🔄 Reload', self)
-        reload_btn.triggered.connect(self.web_view.reload)
-        nav_bar.addAction(reload_btn)
-        
-        # Home button
-        home_btn = QAction('🏠 YouTube', self)
-        home_btn.triggered.connect(self.home)
-        nav_bar.addAction(home_btn)
-        
-        # URL bar
-        self.url_bar = QLineEdit()
-        self.url_bar.setPlaceholderText("Enter URL or search YouTube...")
-        self.url_bar.returnPressed.connect(self.navigate_to_url)
-        nav_bar.addWidget(self.url_bar)
-        
-        # Go button
-        go_btn = QAction('🚀 Go', self)
-        go_btn.triggered.connect(self.navigate_to_url)
-        nav_bar.addAction(go_btn)
-        
-        # Connect signals
-        self.web_view.urlChanged.connect(self.update_url)
-        self.web_view.titleChanged.connect(self.update_title)
-        self.web_view.loadProgress.connect(self.show_loading)
+        # Create navigation
+        self.createNavigation()
         
         # Set central widget
         self.setCentralWidget(self.web_view)
         
-        # Status bar
-        self.status = self.statusBar()
-        self.status.showMessage("Ready - Loading YouTube...")
+        # Apply styling
+        self.applyDarkTheme()
         
-        # Window settings
-        self.setGeometry(100, 100, 1400, 900)
-        self.setWindowTitle('GitHub Browser - YouTube')
+        # Connect signals
+        self.web_view.urlChanged.connect(self.updateUrl)
+        self.web_view.titleChanged.connect(self.updateTitle)
+        self.web_view.loadProgress.connect(self.showProgress)
         
-        # Apply dark theme
-        self.apply_dark_theme()
+        print("✅ YouTube Browser started!")
         
-    def apply_dark_theme(self):
-        # Set dark style sheet
-        dark_stylesheet = """
-        QMainWindow {
-            background-color: #1e1e1e;
-            color: #ffffff;
-        }
-        QToolBar {
-            background-color: #2d2d2d;
-            border: none;
-            spacing: 5px;
-            padding: 5px;
-        }
-        QAction {
-            color: #ffffff;
-            background-color: #3d3d3d;
-            padding: 8px 12px;
-            border-radius: 4px;
-        }
-        QAction:hover {
-            background-color: #4d4d4d;
-        }
-        QLineEdit {
-            background-color: #3d3d3d;
-            color: #ffffff;
-            border: 1px solid #555;
-            border-radius: 4px;
-            padding: 8px 12px;
-            font-size: 14px;
-        }
-        QLineEdit:focus {
-            border-color: #ff0000;
-        }
-        """
-        self.setStyleSheet(dark_stylesheet)
+    def createNavigation(self):
+        nav_bar = QToolBar("Navigation")
+        nav_bar.setMovable(False)
+        self.addToolBar(nav_bar)
         
-    def navigate_to_url(self):
+        # Back button
+        back_btn = QAction('←', self)
+        back_btn.setShortcut('Alt+Left')
+        back_btn.triggered.connect(self.web_view.back)
+        nav_bar.addAction(back_btn)
+        
+        # Forward button
+        forward_btn = QAction('→', self)
+        forward_btn.setShortcut('Alt+Right')
+        forward_btn.triggered.connect(self.web_view.forward)
+        nav_bar.addAction(forward_btn)
+        
+        # Reload button
+        reload_btn = QAction('↻', self)
+        reload_btn.setShortcut('Ctrl+R')
+        reload_btn.triggered.connect(self.web_view.reload)
+        nav_bar.addAction(reload_btn)
+        
+        # Home button
+        home_btn = QAction('🏠', self)
+        home_btn.setShortcut('Ctrl+H')
+        home_btn.triggered.connect(self.goHome)
+        nav_bar.addAction(home_btn)
+        
+        nav_bar.addSeparator()
+        
+        # URL bar
+        self.url_bar = QLineEdit()
+        self.url_bar.setPlaceholderText("Enter YouTube URL or search...")
+        self.url_bar.returnPressed.connect(self.navigateToUrl)
+        nav_bar.addWidget(self.url_bar)
+        
+        # Go button
+        go_btn = QAction('Go', self)
+        go_btn.setShortcut('Return')
+        go_btn.triggered.connect(self.navigateToUrl)
+        nav_bar.addAction(go_btn)
+        
+    def applyDarkTheme(self):
+        self.setStyleSheet("""
+            QMainWindow {
+                background-color: #1e1e1e;
+                color: white;
+            }
+            QToolBar {
+                background-color: #2d2d2d;
+                border: none;
+                spacing: 5px;
+                padding: 8px;
+            }
+            QAction {
+                background-color: #404040;
+                color: white;
+                padding: 8px 12px;
+                border: none;
+                border-radius: 4px;
+                font-weight: bold;
+            }
+            QAction:hover {
+                background-color: #505050;
+            }
+            QAction:disabled {
+                background-color: #333;
+                color: #777;
+            }
+            QLineEdit {
+                background-color: #3a3a3a;
+                color: white;
+                border: 1px solid #555;
+                border-radius: 4px;
+                padding: 8px 12px;
+                font-size: 14px;
+                min-width: 400px;
+            }
+            QLineEdit:focus {
+                border-color: #ff0000;
+            }
+        """)
+        
+    def navigateToUrl(self):
         url = self.url_bar.text().strip()
         if not url:
             return
@@ -119,45 +133,45 @@ class Browser(QMainWindow):
             else:
                 url = 'https://' + url
                 
+        print(f"🌐 Loading: {url}")
         self.web_view.load(QUrl(url))
-        self.status.showMessage(f"Loading: {url}")
         
-    def update_url(self, q):
-        self.url_bar.setText(q.toString())
+    def updateUrl(self, url):
+        self.url_bar.setText(url.toString())
         
-    def update_title(self, title):
-        self.setWindowTitle(f'{title} - GitHub Browser')
+    def updateTitle(self, title):
+        self.setWindowTitle(f"{title} - YouTube Browser")
         
-    def show_loading(self, progress):
+    def showProgress(self, progress):
         if progress < 100:
-            self.status.showMessage(f"Loading... {progress}%")
+            self.statusBar().showMessage(f"Loading... {progress}%")
         else:
-            self.status.showMessage("Ready")
-        
-    def home(self):
+            self.statusBar().showMessage("Ready")
+            
+    def goHome(self):
         self.web_view.load(QUrl("https://www.youtube.com"))
-        self.status.showMessage("Loading YouTube homepage...")
 
 def main():
-    # Enable high DPI scaling
+    print("🚀 Starting YouTube Browser...")
+    
+    # Setup environment
+    os.environ['QT_QPA_PLATFORM'] = 'xcb'
+    os.environ['DISPLAY'] = ':0'
+    
+    # Qt application setup
     QApplication.setAttribute(Qt.AA_EnableHighDpiScaling, True)
     QApplication.setAttribute(Qt.AA_UseHighDpiPixmaps, True)
     
-    # For headless environments
-    if os.environ.get('DISPLAY') is None:
-        os.environ['QT_QPA_PLATFORM'] = 'xcb'
-        os.environ['DISPLAY'] = ':1'
-    
     app = QApplication(sys.argv)
-    
-    # Set application properties
-    app.setApplicationName("GitHub Browser")
+    app.setApplicationName("YouTube Browser")
     app.setApplicationVersion("1.0")
-    app.setWindowIcon(QIcon.fromTheme('web-browser'))
     
     # Create and show browser
-    browser = Browser()
+    browser = YouTubeBrowser()
     browser.show()
+    
+    print("✅ Browser window should be visible in Desktop Lite!")
+    print("🎥 Enjoy YouTube!")
     
     sys.exit(app.exec_())
 
