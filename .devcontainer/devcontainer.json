@@ -1,47 +1,26 @@
 {
     "name": "YouTube Browser",
-    "build": {
-        "dockerfile": "Dockerfile",
-        "context": ".."
-    },
+    "image": "mcr.microsoft.com/devcontainers/python:3.11",
+    
     "features": {
-        "ghcr.io/devcontainers/features/desktop-lite:1": {
-            "version": "latest",
-            "password": "codespaces",
-            "webPort": "6080",
-            "vncPort": "5901"
-        },
-        "ghcr.io/devcontainers/features/python:1": {
-            "version": "3.11"
-        }
+        "ghcr.io/devcontainers/features/desktop-lite:1": {}
     },
-    "forwardPorts": [
-        6080,
-        5901
-    ],
+    
+    "forwardPorts": [6080],
     "portsAttributes": {
         "6080": {
             "label": "Desktop",
             "onAutoForward": "notify"
-        },
-        5901: {
-            "label": "VNC",
-            "onAutoForward": "notify"
         }
     },
-    "postCreateCommand": "sudo apt-get update && sudo apt-get install -y python3-pyqt5.qtwebengine xvfb && pip install -r requirements.txt",
+    
+    "postCreateCommand": "pip install -r requirements.txt",
+    
     "customizations": {
         "vscode": {
             "extensions": [
-                "ms-python.python",
-                "ms-python.vscode-pylance",
-                "formulahendry.auto-close-tag",
-                "formulahendry.auto-rename-tag"
-            ],
-            "settings": {
-                "python.defaultInterpreterPath": "/usr/local/bin/python"
-            }
+                "ms-python.python"
+            ]
         }
-    },
-    "remoteUser": "vscode"
+    }
 }
